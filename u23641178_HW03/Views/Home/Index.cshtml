@@ -1,0 +1,446 @@
+﻿@using PagedList.Mvc
+@using PagedList
+@using u23641178_HW03.ViewModels
+@model HomeViewModel
+
+@{
+    ViewBag.Title = "BikeStores Dashboard";
+}
+
+<link rel="stylesheet" href="~/Content/Page.css"/>
+<!-- ===== Modern Custom Styles ===== -->
+<style>
+    body {
+        background: #f5f6fa;
+        font-family: "Poppins", sans-serif;
+    }
+
+    .dashboard-header {
+        background: linear-gradient(90deg, #001f3f, #003366, #0074D9);
+        color: white;
+        border-radius: 0.75rem;
+        padding: 2rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+        .dashboard-header h1 {
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+    .tab-content {
+        background: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        padding: 1.5rem;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        color: #444;
+        font-weight: 500;
+        border-radius: 0.75rem 0.75rem 0 0;
+        background: #e3e7ed;
+        margin-right: 5px;
+        transition: 0.3s;
+    }
+
+        .nav-tabs .nav-link.active {
+            background: #ff7f50;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+    /* === Card-based Record Styles === */
+    .record-card {
+        background: #fff;
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease-in-out;
+    }
+
+        .record-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .record-card .card-header {
+            border-top-left-radius: 1rem !important;
+            border-top-right-radius: 1rem !important;
+            background: #001f3f;
+            color: white;
+            font-weight: 500;
+        }
+
+    .badge {
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.7rem;
+        font-size: 0.8rem;
+    }
+
+    /* Product Grid */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1rem;
+    }
+
+    .product-card {
+        background: #fffaf5;
+        border-radius: 0.75rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        padding: 1rem;
+        transition: all 0.2s;
+    }
+
+        .product-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-card img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .product-card h6 {
+            font-weight: 600;
+        }
+
+        .product-card .price {
+            color: #e67e22;
+            font-weight: 700;
+        }
+
+    /* Alerts */
+    .alert {
+        border-radius: 0.5rem;
+        font-weight: 500;
+    }
+
+    /* Pagination */
+    .pagination a, .pagination span {
+        border-radius: 0.4rem !important;
+        margin: 0 2px;
+    }
+    .pagination li.active span {
+        background-color: #007bff; /* match section color */
+        border-color: #007bff;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="dashboard-header text-center">
+        <h1><i class="fas fa-bicycle"></i> BikeStores Home Dashboard</h1>
+        <p class="lead">Add staff, customers, and view bicycle products all in one place.</p>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center"><i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger text-center"><i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]</div>
+    }
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="staff-tab" data-toggle="tab" href="#staff" role="tab"><i class="fas fa-users"></i> Staff</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="customer-tab" data-toggle="tab" href="#customer" role="tab"><i class="fas fa-user-friends"></i> Customers</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="product-tab" data-toggle="tab" href="#product" role="tab"><i class="fas fa-bicycle"></i> Products</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="dashboardTabContent">
+
+        <!-- ================= STAFF ================= -->
+        <div class="tab-pane fade show active" id="staff" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3><i class="fas fa-id-badge text-primary"></i> Staff Members</h3>
+                <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createEmployeeModal">
+                    <i class="fas fa-user-plus"></i> Add Staff
+                </button>
+            </div>
+
+            <div class="row">
+                @foreach (var emp in (IPagedList<u23641178_HW03.ViewModels.StaffViewModel>)ViewBag.StaffPage)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="record-card card">
+                            <div class="card-header">@emp.FirstName @emp.LastName</div>
+                            <div class="card-body">
+                                <p><strong>Email:</strong> @emp.Email</p>
+                                <p><strong>Phone:</strong> @emp.Phone</p>
+                                <p><strong>Store:</strong> @emp.StoreName</p>
+                                <p><strong>Manager:</strong> @emp.ManagerName</p>
+                                <span class="badge @(emp.Active == 1 ? "badge-success" : "badge-secondary")">
+                                    @(emp.Active == 1 ? "Active" : "Inactive")
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-3">
+                @Html.PagedListPager((IPagedList)ViewBag.StaffPage,
+                    pageNum => Url.Action("Index", new { staffPage = pageNum }),
+                    new PagedListRenderOptions() { MaximumPageNumbersToDisplay = 5 })
+            </div>
+        </div>
+
+        <!-- ================= CUSTOMERS ================= -->
+        <div class="tab-pane fade" id="customer" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3><i class="fas fa-address-book text-success"></i> Customers</h3>
+                <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#createClientModal">
+                    <i class="fas fa-user-plus"></i> Add Customer
+                </button>
+            </div>
+
+            <div class="row">
+                @foreach (var client in (IPagedList<u23641178_HW03.ViewModels.CustomerViewModel>)ViewBag.CustomerPage)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="record-card card">
+                            <div class="card-header">@client.FirstName @client.LastName</div>
+                            <div class="card-body">
+                                <p><strong>Email:</strong> @client.Email</p>
+                                <p><strong>Phone:</strong> @client.Phone</p>
+                                <p><strong>Address:</strong> @client.Street, @client.City</p>
+                                <p><strong>State:</strong> @client.State</p>
+                                <span class="badge badge-info">ID: @client.CustomerId</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-3">
+                @Html.PagedListPager((IPagedList)ViewBag.CustomerPage,
+                    pageNum => Url.Action("Index", new { customerPage = pageNum }),
+                    new PagedListRenderOptions() { MaximumPageNumbersToDisplay = 5 })
+            </div>
+        </div>
+
+        <!-- ================= PRODUCTS ================= -->
+        <div class="tab-pane fade" id="product" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3><i class="fas fa-bicycle text-info"></i> Product Catalog</h3>
+            </div>
+
+            <form method="get" class="form-inline mb-4">
+                <select name="brandFilter" class="form-control mr-2">
+                    <option value="">All Brands</option>
+                    @foreach (var brand in ViewBag.Brands)
+                    {
+                        <option value="@brand.brand_id" @(ViewBag.SelectedBrand == brand.brand_id ? "selected" : "")>@brand.brand_name</option>
+                    }
+                </select>
+                <select name="categoryFilter" class="form-control mr-2">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in ViewBag.Categories)
+                    {
+                        <option value="@cat.category_id" @(ViewBag.SelectedCategory == cat.category_id ? "selected" : "")>@cat.category_name</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-dark"><i class="fas fa-filter"></i> Filter</button>
+            </form>
+
+            <div class="product-grid">
+                @foreach (var bike in (IPagedList<u23641178_HW03.ViewModels.ProductViewModel>)ViewBag.ProductPage)
+                {
+                    <div class="product-card">
+                        <img src="@Url.Content(bike.ImagePath)" alt="@bike.BrandName" />
+                        <h6>@bike.ProductName</h6>
+                        <p><span class="badge badge-dark">@bike.BrandName</span> <span class="badge badge-warning">@bike.CategoryName</span></p>
+                        <p class="price">@bike.ListPrice.ToString("C")</p>
+                        <small>@bike.ModelYear</small>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-3">
+                @Html.PagedListPager((IPagedList)ViewBag.ProductPage,
+                    pageNum => Url.Action("Index", new { productPage = pageNum }),
+                    new PagedListRenderOptions() { MaximumPageNumbersToDisplay = 5 })
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== CREATE EMPLOYEE MODAL ===================== -->
+<div class="modal fade" id="createEmployeeModal" tabindex="-1" role="dialog" aria-labelledby="createEmployeeModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            @using (Html.BeginForm("CreateStaff", "Home", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-header text-white" style="background: linear-gradient(90deg, #001f3f, #ff7f50); border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                    <h5 class="modal-title"><i class="fas fa-user-plus"></i> Add New Staff Member</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body" style="background-color: #f9f9fb;">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label><i class="fas fa-user"></i> First Name *</label>
+                                <input type="text" name="FirstName" class="form-control form-control-lg shadow-sm" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label><i class="fas fa-user"></i> Last Name *</label>
+                                <input type="text" name="LastName" class="form-control form-control-lg shadow-sm" required />
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label><i class="fas fa-envelope"></i> Email Address *</label>
+                            <input type="email" name="Email" class="form-control form-control-lg shadow-sm" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label><i class="fas fa-phone"></i> Contact Number</label>
+                            <input type="text" name="Phone" class="form-control form-control-lg shadow-sm" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label><i class="fas fa-store"></i> Store Location *</label>
+                            <select name="StoreId" class="form-control form-control-lg shadow-sm" required>
+                                <option value="">-- Select Store --</option>
+                                @foreach (var store in ViewBag.Stores)
+                                {
+                                    <option value="@store.store_id">@store.store_name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label><i class="fas fa-user-tie"></i> Reports To (Optional)</label>
+                            <select name="ManagerId" class="form-control form-control-lg shadow-sm">
+                                <option value="">-- No Supervisor --</option>
+                                @foreach (var supervisor in ViewBag.Managers)
+                                {
+                                    <option value="@supervisor.StaffId">@supervisor.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-briefcase"></i> Employment Status</label>
+                            <select name="Active" class="form-control form-control-lg shadow-sm">
+                                <option value="1" selected>Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer d-flex justify-content-between" style="background-color: #f1f3f5; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn text-white px-4" style="background-color: #ff7f50;">
+                        <i class="fas fa-save"></i> Save Staff
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+<!-- ===================== CREATE CLIENT MODAL ===================== -->
+<div class="modal fade" id="createClientModal" tabindex="-1" role="dialog" aria-labelledby="createClientModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            @using (Html.BeginForm("CreateCustomer", "Home", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-header text-white" style="background: linear-gradient(90deg, #001f3f, #ff7f50); border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                    <h5 class="modal-title"><i class="fas fa-user-plus"></i> Register New Customer</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body" style="background-color: #f9f9fb;">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label><i class="fas fa-user"></i> First Name *</label>
+                                <input type="text" name="FirstName" class="form-control form-control-lg shadow-sm" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label><i class="fas fa-user"></i> Last Name *</label>
+                                <input type="text" name="LastName" class="form-control form-control-lg shadow-sm" required />
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label><i class="fas fa-envelope"></i> Email Address *</label>
+                            <input type="email" name="Email" class="form-control form-control-lg shadow-sm" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label><i class="fas fa-phone"></i> Contact Number</label>
+                            <input type="text" name="Phone" class="form-control form-control-lg shadow-sm" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label><i class="fas fa-map-marker-alt"></i> Street Address</label>
+                            <input type="text" name="Street" class="form-control form-control-lg shadow-sm" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label><i class="fas fa-city"></i> City</label>
+                                <input type="text" name="City" class="form-control form-control-lg shadow-sm" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label><i class="fas fa-flag"></i> State</label>
+                                <input type="text" name="State" class="form-control form-control-lg shadow-sm" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label><i class="fas fa-mail-bulk"></i> Zip Code</label>
+                                <input type="text" name="ZipCode" class="form-control form-control-lg shadow-sm" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer d-flex justify-content-between" style="background-color: #f1f3f5; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn text-white px-4" style="background-color: #ff7f50;">
+                        <i class="fas fa-save"></i> Register Customer
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            setTimeout(() => { $('.alert').fadeOut('slow'); }, 4000);
+        });
+    </script>
+}

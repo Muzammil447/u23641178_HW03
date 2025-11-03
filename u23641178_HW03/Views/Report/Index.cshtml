@@ -1,0 +1,673 @@
+﻿@using u23641178_HW03.ViewModels
+@model ReportViewModel
+@{
+    ViewBag.Title = "Analytics & Reports";
+}
+<style>
+    /* === Overall page === */
+body {
+    background: #ffffff;
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+    color: #1a1a1a;
+}
+
+/* Page title / header */
+.container-fluid > h1.mb-4 {
+    text-align: center;
+    color: #4b3bff;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: 1px;
+    margin-bottom: 2rem;
+}
+.container-fluid > h1.mb-4 i {
+    color: #ff6f61;
+    margin-right: 0.7rem;
+    transform-origin: center;
+    animation: spin 5s linear infinite;
+}
+@@keyframes spin { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
+
+/* Card styling */
+.card {
+    border: none;
+    border-radius: 18px;
+    background: #fdfdfd;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.12); }
+
+/* Card headers */
+.card-header {
+    font-weight: 700;
+    border-radius: 18px 18px 0 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.95rem;
+    background: linear-gradient(90deg, #ff6f61, #ffb86c);
+    color: #fff;
+}
+
+/* Buttons */
+.btn-primary { background: linear-gradient(135deg, #4b3bff, #6f57ff); color: #fff; border-radius: 10px; }
+.btn-success { background: linear-gradient(135deg, #28c76f, #9be15d); color: #fff; border-radius: 10px; }
+.btn-warning { background: linear-gradient(135deg, #ff9f43, #ffda76); color: #fff; border-radius: 10px; }
+.btn-danger  { background: linear-gradient(135deg, #ff6f61, #ff3d4a); color: #fff; border-radius: 10px; }
+.btn-outline-primary,
+.btn-outline-success,
+.btn-outline-warning,
+.btn-outline-info {
+    border-radius: 10px;
+    border-width: 2px;
+    transition: all 0.2s;
+}
+.btn-outline-primary:hover { background: #4b3bff; color: #fff; }
+
+/* Tables */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.table thead th {
+    background: #4b3bff;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-size: 0.85rem;
+}
+.table tbody tr {
+    background: #ffffff;
+}
+.table tbody tr:hover {
+    background: #f0f0ff;
+}
+.table td, .table th {
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+}
+    .btn-custom {
+        background: #f3f3f3;
+        color: #333;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 0.6rem 1.2rem;
+        border: 2px solid #d0d0d0;
+        transition: all 0.2s ease;
+    }
+
+        .btn-custom:hover {
+            background: #2575fc;
+            color: #fff;
+            transform: translateY(-2px);
+            border-color: #2575fc;
+        }
+
+    .btn-custom-active {
+        background: #6a11cb;
+        color: #fff;
+        border: 2px solid #6a11cb;
+        font-weight: 700;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+
+/* Badges */
+.badge-info    { background: #6f57ff; color: #fff; font-weight: 600; border-radius: .6rem; }
+.badge-success { background: #28c76f; color: #fff; border-radius: .5rem; }
+.badge-secondary { background: #d3d3d3; color: #333; }
+
+/* Alerts */
+.alert { border-radius: 1rem; font-weight: 500; }
+
+/* Modal styling */
+.modal-content { border-radius: 18px; overflow: hidden; }
+.modal-header.bg-warning { background: linear-gradient(135deg, #ff9f43, #ffda76); color: #fff; border-bottom: none; }
+.modal-footer { background: #fafafa; border-top: 1px solid rgba(0,0,0,0.05); }
+
+/* Pagination styling */
+.pagination li a, .pagination li span {
+    display:inline-block;
+    padding: .45rem .85rem;
+    border-radius: 10px;
+    background: #fff;
+    color: #4b3bff;
+    font-weight: 600;
+    min-width: 42px;
+    text-align:center;
+}
+.pagination li.active span {
+    background: linear-gradient(135deg, #4b3bff, #6f57ff);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(75,59,255,0.3);
+    transform: scale(1.05);
+    border-color: transparent;
+}
+
+/* Chart container tweaks */
+canvas { border-radius: 16px; background: #f8f8ff; padding: 1rem; }
+
+/* Responsive tweaks */
+@@media (max-width: 768px) {
+    .table td, .table th { padding: 0.5rem .6rem; font-size: 0.85rem; }
+}
+    .dashboard-header {
+        background: linear-gradient(90deg, #001f3f, #003366, #0074D9);
+        color: white;
+        border-radius: 0.75rem;
+        padding: 2rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+</style>
+<div class="container-fluid mt-4">
+    <div class="dashboard-header text-center">
+        <h1><i class="fas fa-bicycle"></i> BikeStores Report Dashboard</h1>
+        <p class="lead">View, export and download reports all in one place</p>
+    </div>
+
+    <!-- Report Type Selector -->
+    <div class="card mb-4 shadow-lg" style="border-radius: 20px; border: 2px solid #e0e0e0;">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #6a11cb, #2575fc); border-radius: 20px 20px 0 0;">
+            <h3 class="mb-0" style="font-weight: 700; letter-spacing: 1px;">
+                <i class="fas fa-list-alt"></i> Select Your Report
+            </h3>
+        </div>
+        <div class="card-body" style="padding: 1.5rem;">
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a href="@Url.Action("Index", new { reportType = "customer" })"
+                   class="btn @(Model.ReportType == "customer" ? "btn-custom-active" : "btn-custom")">
+                    <i class="fas fa-trophy"></i> Top Clients
+                </a>
+                <a href="@Url.Action("Index", new { reportType = "staff" })"
+                   class="btn @(Model.ReportType == "staff" ? "btn-custom-active" : "btn-custom")">
+                    <i class="fas fa-medal"></i> Employee Performance
+                </a>
+                <a href="@Url.Action("Index", new { reportType = "popular" })"
+                   class="btn @(Model.ReportType == "popular" ? "btn-custom-active" : "btn-custom")">
+                    <i class="fas fa-fire"></i> Top Performing Products
+                </a>
+                <a href="@Url.Action("Index", new { reportType = "sales" })"
+                   class="btn @(Model.ReportType == "sales" ? "btn-custom-active" : "btn-custom")">
+                    <i class="fas fa-chart-line"></i> Revenue Flow Overview
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Report Content Display -->
+    <div class="card mb-4 shadow">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">
+                @switch (Model.ReportType)
+                {
+                    case "customer":
+                        <text> Top Customer Rankings</text>
+                        break;
+                    case "staff":
+                        <text>Employee Performance Metrics</text>
+                        break;
+                    case "popular":
+                        <text>Top Performing Products Analysis</text>
+                        break;
+                    case "sales":
+                        <text>Revenue Flow Overview Report</text>
+                        break;
+                }
+            </h3>
+        </div>
+        <div class="card-body">
+            @* Best Sellers Report *@
+            @if (Model.ReportType == "popular" && Model.PopularProducts != null)
+            {
+                <div class="mb-4">
+                    <canvas id="analyticsChart" style="max-height: 400px;"></canvas>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Position</th>
+                                <th>Product Name</th>
+                                <th>Brand</th>
+                                <th>Category</th>
+                                <th>Order Count</th>
+                                <th>Revenue Generated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int position = 1; }
+                            @foreach (var product in Model.PopularProducts)
+                            {
+                                <tr>
+                                    <td><strong class="text-primary">#@position</strong></td>
+                                    <td>@product.ProductName</td>
+                                    <td><span class="badge badge-info">@product.BrandName</span></td>
+                                    <td><span class="badge badge-secondary">@product.CategoryName</span></td>
+                                    <td><span class="badge badge-success">@product.OrderCount</span></td>
+                                    <td><strong class="text-success">@product.TotalRevenue.ToString("C")</strong></td>
+                                </tr>
+                                position++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @* Sales Timeline Report *@
+            @if (Model.ReportType == "sales" && Model.SalesFrequency != null)
+            {
+                <div class="mb-4">
+                    <canvas id="analyticsChart" style="max-height: 400px;"></canvas>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Total Orders</th>
+                                <th>Total Quantity</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sale in Model.SalesFrequency)
+                            {
+                                <tr>
+                                    <td><strong>@sale.OrderDate.ToString("yyyy-MM-dd")</strong></td>
+                                    <td><span class="badge badge-primary">@sale.TotalOrders</span></td>
+                                    <td><span class="badge badge-info">@sale.TotalQuantity</span></td>
+                                    <td><strong class="text-success">@sale.TotalRevenue.ToString("C")</strong></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            @* Top Clients Report *@ @if (Model.ReportType == "customer" && Model.CustomerRanking != null)
+            {<div class="mb-4"> <canvas id="analyticsChart" style="max-height: 400px;"></canvas> </div> <div class="table-responsive"> <table class="table table-striped table-hover table-bordered"> <thead class="thead-dark"> <tr> <th>Position</th> <th>Client Name</th> <th>Email</th> <th>Total Orders</th> <th>Total Quantity</th> <th>Total Spending</th> </tr> </thead> <tbody> @{ int clientPosition = 1; } @foreach (var client in Model.CustomerRanking)
+            {<tr> <td><strong class="text-primary">#@clientPosition</strong></td> <td>@client.CustomerName</td> <td><small>@client.Email</small></td> <td><span class="badge badge-primary">@client.TotalOrders</span></td> <td><span class="badge badge-info">@client.TotalQuantity</span></td> <td><strong class="text-success">@client.TotalSpent.ToString("C")</strong></td> </tr>clientPosition++;
+        } </tbody> </table> </div> }
+
+
+        @* Employee Performance Report *@
+            @if (Model.ReportType == "staff" && Model.StaffRanking != null)
+            {
+                <div class="mb-4">
+                    <canvas id="analyticsChart" style="max-height: 400px;"></canvas>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Position</th>
+                                <th>Employee Name</th>
+                                <th>Email</th>
+                                <th>Total Sales</th>
+                                <th>Total Quantity</th>
+                                <th>Revenue Generated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int empPosition = 1; }
+                            @foreach (var employee in Model.StaffRanking)
+                            {
+                                <tr>
+                                    <td><strong class="text-primary">#@empPosition</strong></td>
+                                    <td>@employee.StaffName</td>
+                                    <td><small>@employee.Email</small></td>
+                                    <td><span class="badge badge-primary">@employee.TotalSales</span></td>
+                                    <td><span class="badge badge-info">@employee.TotalQuantity</span></td>
+                                    <td><strong class="text-success">@employee.TotalRevenue.ToString("C")</strong></td>
+                                </tr>
+                                empPosition++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <!-- Export Report Section -->
+            <div class="mt-4 p-4 bg-light border rounded shadow-sm">
+                <h5><i class="fas fa-download"></i> Export Report</h5>
+                <form id="exportReportForm" class="form-inline">
+                    <div class="form-group mr-3">
+                        <label class="mr-2">File Name:</label>
+                        <input type="text" id="exportFileName" class="form-control" placeholder="report_name" required />
+                    </div>
+                    <div class="form-group mr-3">
+                        <label class="mr-2">Format:</label>
+                        <select id="exportFileType" class="form-control">
+                            <option value=".pdf">PDF Document</option>
+                            <option value=".xlsx">Excel Spreadsheet</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-success" onclick="exportCurrentReport()">
+                        <i class="fas fa-file-download"></i> Export Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Reports Archive -->
+    <div class="card mb-4 shadow">
+        <div class="card-header bg-info text-white">
+            <h3 class="mb-0"><i class="fas fa-folder-open"></i> Saved Reports Archive</h3>
+        </div>
+        <div class="card-body">
+            @if (Model.ArchivedDocuments != null && Model.ArchivedDocuments.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>File Name</th>
+                                <th>Format</th>
+                                <th>Created On</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var archive in Model.ArchivedDocuments)
+                            {
+                                <tr>
+                                    <td><i class="fas fa-file"></i> @archive.FileName</td>
+                                    <td>
+                                        @if (archive.FileType == ".pdf")
+                                        {
+                                            <span class="badge badge-danger"><i class="fas fa-file-pdf"></i> PDF</span>
+                                        }
+                                        else if (archive.FileType == ".xlsx")
+                                        {
+                                            <span class="badge badge-success"><i class="fas fa-file-excel"></i> Excel</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-secondary">@archive.FileType</span>
+                                        }
+                                    </td>
+                                    <td>@archive.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <span id="notes_@archive.FileName.Replace(".", "_")">@archive.Description</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="downloadArchivedReport('@archive.FileName')">
+                                            <i class="fas fa-download"></i> Download
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" onclick="editReportNotes('@archive.FileName')">
+                                            <i class="fas fa-edit"></i> Add Description
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="removeArchivedReport('@archive.FileName')">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No saved reports available. Export a report to get started!
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Edit Notes Modal -->
+<div class="modal fade" id="editNotesModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Report Notes</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="notes_filename" />
+                <div class="form-group">
+                    <label>Report Notes:</label>
+                    <textarea id="notes_content" class="form-control" rows="6"
+                              style="resize: vertical; min-height: 120px;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-warning" onclick="saveReportNotes()">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // ============ BEST SELLERS VISUALIZATION ============
+            @if (Model.ReportType == "popular" && Model.PopularProducts != null && Model.PopularProducts.Any())
+            {
+                <text>
+                const chartCanvas = document.getElementById('analyticsChart');
+                if (chartCanvas) {
+                    const context = chartCanvas.getContext('2d');
+                    new Chart(context, {
+                        type: 'pie',
+                        data: {
+                            labels: [@Html.Raw(string.Join(",", Model.PopularProducts
+                                .Select(p => "'" + p.ProductName.Replace("'", "\\'") + "'")))],
+                            datasets: [{
+                                label: 'Revenue ($)',
+                                data: [@Html.Raw(string.Join(",", Model.PopularProducts
+                                    .Select(p => p.TotalRevenue.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.85)',
+                                    'rgba(54, 162, 235, 0.85)',
+                                    'rgba(255, 206, 86, 0.85)',
+                                    'rgba(75, 192, 192, 0.85)',
+                                    'rgba(153, 102, 255, 0.85)',
+                                    'rgba(255, 159, 64, 0.85)',
+                                    'rgba(199, 199, 199, 0.85)',
+                                    'rgba(83, 102, 255, 0.85)',
+                                    'rgba(255, 99, 255, 0.85)',
+                                    'rgba(99, 255, 132, 0.85)'
+                                ],
+                                borderColor: '#ffffff',
+                                borderWidth: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: { boxWidth: 18, font: { size: 13 } }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (ctx) {
+                                            const lbl = ctx.label || '';
+                                            const val = ctx.parsed || 0;
+                                            const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((val / sum) * 100).toFixed(1);
+                                            return `${lbl}: $${val.toFixed(2)} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                </text>
+            }
+
+            // ============ SALES TIMELINE VISUALIZATION ============
+            else if (Model.ReportType == "sales" && Model.SalesFrequency != null && Model.SalesFrequency.Any())
+            {
+                <text>
+                const chartCanvas = document.getElementById('analyticsChart');
+                if (chartCanvas) {
+                    const context = chartCanvas.getContext('2d');
+                    new Chart(context, {
+                        type: 'line',
+                        data: {
+                            labels: [@Html.Raw(string.Join(",", Model.SalesFrequency.Select(s => "'" + s.OrderDate.ToString("yyyy-MM-dd") + "'")))],
+                            datasets: [{
+                                label: 'Revenue',
+                                data: [@Html.Raw(string.Join(",", Model.SalesFrequency.Select(s => s.TotalRevenue.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
+                                backgroundColor: 'rgba(75, 192, 192, 0.3)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 5,
+                                pointHoverRadius: 7
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+                </text>
+            }
+
+            // ============ TOP CLIENTS VISUALIZATION ============
+            else if (Model.ReportType == "customer" && Model.CustomerRanking != null && Model.CustomerRanking.Any())
+            {
+                <text>
+                const chartCanvas = document.getElementById('analyticsChart');
+                if (chartCanvas) {
+                    const context = chartCanvas.getContext('2d');
+                    new Chart(context, {
+                        type: 'bar',
+                        data: {
+                            labels: [@Html.Raw(string.Join(",", Model.CustomerRanking
+                                .Select(c => "'" + c.CustomerName.Replace("'", "\\'") + "'")))],
+                            datasets: [{
+                                label: 'Total Spending ($)',
+                                data: [@Html.Raw(string.Join(",", Model.CustomerRanking
+                                    .Select(c => c.TotalSpent.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
+                                backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                                borderColor: 'rgba(255, 159, 64, 1)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: { x: { beginAtZero: true } }
+                        }
+                    });
+                }
+                </text>
+            }
+
+            // ============ EMPLOYEE PERFORMANCE VISUALIZATION ============
+            else if (Model.ReportType == "staff" && Model.StaffRanking != null && Model.StaffRanking.Any())
+            {
+                <text>
+                const chartCanvas = document.getElementById('analyticsChart');
+                if (chartCanvas) {
+                    const context = chartCanvas.getContext('2d');
+                    new Chart(context, {
+                        type: 'bar',
+                        data: {
+                            labels: [@Html.Raw(string.Join(",", Model.StaffRanking
+                                .Select(s => "'" + s.StaffName.Replace("'", "\\'") + "'")))],
+                            datasets: [{
+                                label: 'Revenue Generated ($)',
+                                data: [@Html.Raw(string.Join(",", Model.StaffRanking
+                                    .Select(s => s.TotalRevenue.ToString("F2", System.Globalization.CultureInfo.InvariantCulture))))],
+                                backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: { x: { beginAtZero: true } }
+                        }
+                    });
+                }
+                </text>
+            }
+        });
+
+        // ---------- Export and Management Functions ----------
+        function exportCurrentReport() {
+            const filename = $('#exportFileName').val();
+            const filetype = $('#exportFileType').val();
+            const reportCategory = '@Model.ReportType';
+
+            if (!filename) {
+                alert('Please enter a filename');
+                return;
+            }
+
+            $.post('@Url.Action("SaveReport", "Report")',
+                { reportType: reportCategory, fileType: filetype, fileName: filename },
+                function (response) {
+                    alert(response.message);
+                    if (response.success) location.reload();
+                }
+            );
+        }
+
+        function downloadArchivedReport(filename) {
+            window.location.href = '@Url.Action("DownloadReport", "Report")' + '?fileName=' + encodeURIComponent(filename);
+        }
+
+        function removeArchivedReport(filename) {
+            if (!confirm('Delete this report permanently?')) return;
+
+            $.post('@Url.Action("DeleteReport", "Report")',
+                { fileName: filename },
+                function (response) {
+                    alert(response.message);
+                    if (response.success) location.reload();
+                }
+            );
+        }
+
+        function editReportNotes(filename) {
+            $('#notes_filename').val(filename);
+            const existingNotes = $('#notes_' + filename.replace(/\./g, '_')).text();
+            $('#notes_content').val(existingNotes);
+            $('#editNotesModal').modal('show');
+        }
+
+        function saveReportNotes() {
+            const filename = $('#notes_filename').val();
+            const notesContent = $('#notes_content').val();
+
+            $.post('@Url.Action("UpdateDescription", "Report")',
+                { fileName: filename, description: notesContent },
+                function (response) {
+                    alert(response.message);
+                    if (response.success) {
+                        $('#editNotesModal').modal('hide');
+                        location.reload();
+                    }
+                }
+            );
+        }
+    </script>
+}
